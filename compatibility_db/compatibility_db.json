@@ -282,6 +282,54 @@
       "since": "0.1",
       "confidence": 90,
       "notes": "PIEGE CRITIQUE, absent de toute doc initiale : declarer des gb_audio_track_wav et appeler playSFX/playMusicStream ne suffit PAS -- aucun son ne sort tant que (1) les pistes ne sont pas enregistrees aupres d'un gb_audio_player via add_track(), et (2) une tache dediee n'appelle pas player.pool() en boucle (toutes les ~2ms) pour alimenter le FIFO I2S. Symptome observe : silence TOTAL malgre un code par ailleurs correct. Solution : Pokitto::Sound::begin() -- enregistre les pistes, regle le volume materiel (gb_ll_audio_set_volume), demarre la tache de mixage (xTaskCreatePinnedToCore) -- appele automatiquement depuis Pokitto::Core::begin(). A inclure des la V0.1 de tout portage."
+    },
+    {
+      "symbol": "My_settings.h (#define INCLUDE_SOUND / INCLUDE_SOUND_FROM_SD)",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.2",
+      "confidence": 100,
+      "notes": "CONFIRME sur 2e jeu (Galaxy Fighter) : My_settings.h du jeu DEFINIT REELLEMENT ces macros (le vrai systeme de build Pokitto les lit). pokitto2aka devrait PARSER My_settings.h automatiquement et reporter ses #define pertinents en target_compile_definitions, plutot que de les redecouvrir a la main a chaque jeu (ce qui a coute plusieurs allers-retours sur Kong-II)."
+    },
+    {
+      "symbol": "Pokitto::Display::width / height",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.2",
+      "confidence": 100,
+      "notes": "Utilises comme CHAMPS STATIQUES nus (PD::width, pas PD::width()) par Galaxy Fighter. static constexpr int16_t, valeurs 220x176."
+    },
+    {
+      "symbol": "Pokitto::Display::invisiblecolor",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.2",
+      "confidence": 100,
+      "notes": "ECART D'USAGE entre jeux : Kong-II appelle setInvisibleColor(14) (methode), Galaxy Fighter assigne PD::invisiblecolor = 4; directement (champ public). Fournir les DEUX (champ + methode qui l'assigne) couvre les deux styles."
+    },
+    {
+      "symbol": "Pokitto::Display::screenbuffer",
+      "status": "WRAPPED",
+      "category": "display",
+      "since": "0.2",
+      "confidence": 85,
+      "notes": "Acces DIRECT au framebuffer indexe (ecriture brute via memset/pointeur, pas seulement via les primitives de dessin). A necessite de reconcevoir Display (V0.1->V0.2) : passage d'un modele 'blit immediat par primitive' a un vrai FRAMEBUFFER INDEXE PERSISTANT (220x176, 4bpp, 2px/octet), decode+blitte en un seul bloc par present(). Upgrade retro-compatible avec Kong-II (aucune regression, verifie)."
+    },
+    {
+      "symbol": "Pokitto::Display::drawColumn",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.2",
+      "confidence": 90,
+      "notes": "drawColumn(x, y0, y1) : trace une colonne verticale (equivalent simplifie de drawLine pour les verticales). Utilise pour un champ d'etoiles defilant et des bordures d'ecran."
+    },
+    {
+      "symbol": "Pokitto::Display::setFont / fontC64",
+      "status": "PARTIAL",
+      "category": "display",
+      "since": "0.2",
+      "confidence": 60,
+      "notes": "fontC64 (comme palettePico) est fournie par le vrai SDK Pokitto, ABSENTE des sources de jeux portes. Aucune police Pokitto reelle n'etant disponible, une police 5x7 maison a ete generee par rendu programmatique (voir pokitto_compat/Font5x7.h) et exposee sous le nom fontC64. Couvre uniquement espace..Z (majuscules, chiffres, ponctuation de base) ; setFont() accepte un pointeur de police mais une seule police est actuellement utilisable."
     }
   ]
 }

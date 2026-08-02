@@ -603,3 +603,57 @@ pour tout nouveau portage :
 long sur MENU) doit etre implementee et testee **avant** tout autre travail
 de portage sur un nouveau jeu -- c'est elle qui a permis de diagnostiquer
 precisement le bug `drawBitmap` sans elle, on aurait devine a l'aveugle.
+
+---
+
+# Addendum — 2e jeu de reference (Galaxy Fighter) : validation croisee
+
+Premiere vraie validation de la methode sur un jeu DIFFERENT de Kong-II.
+Resultat global : la fondation (Core/Buttons/Cookie/Sound/macros AVR)
+s'est reutilisee sans modification. Un point a force une evolution
+architecturale du module Display.
+
+## Constat
+
+Galaxy Fighter accede DIRECTEMENT au framebuffer (`PD::screenbuffer`,
+memset brut), lit `PD::width`/`PD::height` comme des champs simples, et
+assigne `PD::invisiblecolor` directement (pas seulement via une methode).
+Le modele V0.1 ("chaque primitive blitte immediatement vers l'ecran reel")
+ne pouvait pas satisfaire cet acces direct.
+
+## Decision retenue
+
+✅ `Pokitto::Display` gere desormais un vrai **framebuffer indexe
+persistant** (220x176, 4 bits/pixel, 2 pixels/octet) — exactement comme le
+Pokitto reel. Toutes les primitives (drawPixel, fillRect, drawBitmap,
+drawColumn...) ECRIVENT dans ce framebuffer ; `present()` (appele une fois
+par frame) decode l'integralite du buffer via la palette et fait un seul
+blit vers l'ecran AKA. C'est un changement d'architecture (V0.1 -> V0.2),
+mais **retro-compatible a 100% avec Kong-II** (verifie : Kong-II n'utilise
+aucune des nouvelles API, aucune regression).
+
+## A retenir pour la suite
+
+Cette architecture (framebuffer persistant + present() unique) est
+desormais la reference pour `pokitto_compat`, pas seulement un cas
+particulier pour Galaxy Fighter. Tout nouveau jeu qui accederait au
+framebuffer autrement (ex. mode graphique different, double-buffering
+explicite) devra etre etudie au cas par cas.
+
+## My_settings.h : lecture automatique a prevoir
+
+Confirme sur ce 2e jeu : `My_settings.h` de CHAQUE jeu Pokitto definit
+reellement `INCLUDE_SOUND`/`INCLUDE_SOUND_FROM_SD` (et d'autres flags
+`PROJ_*`). Le convertisseur `pokitto2aka` (non encore implemente) devrait
+PARSER ce fichier et reporter automatiquement ses `#define` pertinents,
+plutot que de les decouvrir manuellement jeu par jeu (a coute plusieurs
+allers-retours de debogage sur Kong-II, ou l'absence d'INCLUDE_SOUND
+causait un silence total sans la moindre erreur de compilation).
+
+## Police : aucune police Pokitto reelle disponible
+
+Comme `palettePico`, les polices nommees (`fontC64`, etc.) sont fournies
+par le vrai SDK Pokitto et absentes des depots de jeux portes. Une police
+5x7 maison a ete generee par rendu programmatique (voir
+`pokitto_compat/Font5x7.h`) plutot que de tenter de reconstituer la police
+d'origine a la main.
