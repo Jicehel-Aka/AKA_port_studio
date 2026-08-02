@@ -481,3 +481,125 @@ AKA Port Studio doit privilégier :
 3. La simplicité pour l'utilisateur.
 4. Le respect des auteurs.
 5. La maintenabilité à long terme.
+
+---
+
+# Addendum — retour d'expérience portage Kong-II (V0.1)
+
+Décisions/constats issus du premier portage réel, à connaître avant
+d'implémenter `pokitto2aka` (l'automatisation) ou de porter un second jeu.
+
+## Placement physique des composants ESP-IDF
+
+## Constat
+
+Le schéma d'architecture montre `aka_runtime` et `pokitto_compat` comme
+dossiers frères à la racine du projet. **En pratique**, le système de build
+ESP-IDF ne scanne par défaut que `components/` et `main/` — des composants
+placés à la racine ne sont pas découverts sans `EXTRA_COMPONENT_DIRS`.
+
+## Décision retenue
+
+✅ Placer `aka_runtime/` et `pokitto_compat/` sous `components/`, au même
+niveau que le SDK `gamebuino` (`components/aka_runtime`,
+`components/pokitto_compat`). La séparation **logique** décrite dans
+l'architecture reste inchangée ; seule l'imbrication physique diffère d'un
+niveau, ce qui est la convention standard ESP-IDF.
+
+## Alternative rejetée
+
+❌ `EXTRA_COMPONENT_DIRS` pointant vers les dossiers racine — techniquement
+possible mais sémantique ambiguë (dossier unique vs dossier conteneur de
+plusieurs composants) et donc plus risqué à générer automatiquement dans
+`pokitto2aka`.
+
+---
+
+## Code partagé entre composants (ex. lecture des boutons)
+
+## Constat
+
+Un composant ESP-IDF ne voit **que** les `INCLUDE_DIRS` publics des
+composants qu'il déclare dans `REQUIRES` — jamais l'inverse. Du code
+partagé par plusieurs composants (ex. `core/input.h`, la lecture des
+boutons/joystick) ne doit donc **pas** vivre dans `main/`, sinon
+`aka_runtime` et `pokitto_compat` (qui en ont besoin) ne peuvent pas le
+voir.
+
+## Décision retenue
+
+✅ Tout code d'infrastructure partagé (lecture des boutons, etc.) vit dans
+`aka_runtime` (le composant "socle commun" déjà conçu pour ça), jamais dans
+`main`. `main` peut dépendre de tout ; rien ne doit dépendre de `main`.
+
+---
+
+## Audio : primitive PCM directe disponible dans le SDK
+
+## Constat
+
+Le SDK partagé (`components/gamebuino`) fournit déjà
+`gb_audio_track_wav::play_raw(const int16_t*, size_t)` — lecture
+d'échantillons PCM 16 bits directement depuis la mémoire, sans encapsulage
+WAV. C'est la primitive idéale pour `Pokitto::Sound::playSFX` (échantillons
+embarqués courts) ; `play_wav(chemin)` convient pour `playMusicStream`
+(streaming SD, nécessite un fichier avec en-tête RIFF/WAVE valide).
+
+## Décision retenue
+
+✅ `pokitto_compat` s'appuie directement sur `gb_audio_track_wav`, pas besoin
+d'un nouveau sous-système audio.
+
+---
+
+## Jeu de validation V0.1 (Kong-II) : bilan
+
+## Constat
+
+Une fois la fondation (`pokitto_compat` + `aka_runtime` + macros AVR)
+posée, la quasi-totalité des ~50 fichiers sources de Kong-II a compilé sans
+modification du code métier — conforme à l'objectif "conservation du code
+métier". Les seules interventions sur le code source du jeu ont été :
+
+- reformatage des `#include "Pokitto.h"` → `#include "pokitto_compat/Pokitto.h"` ;
+- un `-Wno-error` supplémentaire pour une ligne de code mort préexistante
+  (`return X; Y;`) dans le jeu d'origine — corrigé côté flags de
+  compilation plutôt que dans le fichier vendu, pour rester fidèle au
+  principe de conservation.
+
+## Confirme
+
+Le principe directeur "conservation du code métier + couche de
+compatibilité" fonctionne comme prévu pour ce premier cas réel.
+
+---
+
+## Addendum — bugs trouves uniquement sur materiel reel (premier test Kong-II)
+
+Deux bugs graves ont echappe a la revue de code et n'ont ete decouverts
+qu'au premier lancement sur console. A retenir pour le processus de
+validation de tout futur portage :
+
+## Constat
+
+- Le bug d'alignement des lignes `drawBitmap` (cisaillement diagonal) ne se
+  voit QUE visuellement, sur ecran reel -- rien dans les logs de compilation
+  ne le signale.
+- Le silence audio total ne produit aucune erreur ni warning -- le code
+  playSFX/playMusicStream s'execute "normalement" sans jamais rien produire.
+
+## Decision retenue
+
+✅ Le processus V1.0 de `pokitto2aka` doit prevoir une etape de **validation
+visuelle et audio sur materiel reel** (ou emulateur fidele), pas seulement
+"le projet compile". Deux verifications minimales a automatiser/documenter
+pour tout nouveau portage :
+1. Capturer un ecran (splash + un ecran avec du texte/UI) et verifier
+   l'absence de cisaillement sur les sprites a largeur impaire.
+2. Confirmer qu'au moins un son (SFX de menu) est audible des le premier
+   lancement.
+
+✅ La fonction de capture d'ecran (`AkaRuntime::takeScreenshot()`, appui
+long sur MENU) doit etre implementee et testee **avant** tout autre travail
+de portage sur un nouveau jeu -- c'est elle qui a permis de diagnostiquer
+precisement le bug `drawBitmap` sans elle, on aurait devine a l'aveugle.

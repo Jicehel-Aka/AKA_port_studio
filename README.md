@@ -239,11 +239,11 @@ Ces projets servent de base pour étendre progressivement la compatibilité de l
 
 ## V0.1
 
-- Runtime AKA
-- Compatibilité Pokitto minimale
-- Analyseur de projet
-- Convertisseur basique
-- Portage pilote : Kong II
+- Runtime AKA (fondation : SD, chemins, retour loader — menu systeme complet a venir)
+- Compatibilite Pokitto minimale (Core/Buttons/Display/Sound/Cookie, valides sur Kong-II)
+- Analyseur de projet (a faire — le portage V0.1 a ete fait manuellement, cf. compatibility_db pour les constats a automatiser)
+- Convertisseur basique (a faire)
+- Portage pilote : Kong II (code source compile ; execution/jouabilite sur materiel reel a confirmer)
 
 ## V0.2
 

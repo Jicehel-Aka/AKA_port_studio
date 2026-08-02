@@ -1,4 +1,287 @@
 {
   "schema_version": 1,
-  "symbols": []
+  "symbols": [
+    {
+      "symbol": "Pokitto::Core::begin",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Core::update",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 90,
+      "notes": "Cadence via setFrameRate(). Presente la frame precedente (Display::present) avant de rendre la main, pour rester coherent avec le cycle flip/draw reel de Pokitto."
+    },
+    {
+      "symbol": "Pokitto::Core::isRunning",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Core::setFrameRate",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Core::frameCount",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Core::sound",
+      "status": "WRAPPED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 70,
+      "notes": "updateStream() est un no-op (le mixage audio AKA tourne en tache de fond). ATTENTION : doit etre un membre 'inline static' -- Kong-II l'utilise via PC::sound.updateStream() (acces qualifie par la classe), impossible si le membre n'est pas statique."
+    },
+    {
+      "symbol": "Pokitto::Buttons::pressed",
+      "status": "SUPPORTED",
+      "category": "buttons",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Buttons::repeat",
+      "status": "PARTIAL",
+      "category": "buttons",
+      "since": "0.1",
+      "confidence": 60,
+      "notes": "Auto-repeat approxime a partir de holdStart[]/frameInterval, pas la temporisation exacte du Pokitto reel. A valider au ressenti manette."
+    },
+    {
+      "symbol": "Pokitto::Buttons::released",
+      "status": "SUPPORTED",
+      "category": "buttons",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Buttons::pollButtons",
+      "status": "WRAPPED",
+      "category": "buttons",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "No-op : le sondage reel se fait dans Core::update() via input_poll(g_keys), une seule fois par frame (bus I2C partage)."
+    },
+    {
+      "symbol": "Pokitto::Buttons::aBtn/bBtn/cBtn/upBtn/downBtn/leftBtn/rightBtn",
+      "status": "SUPPORTED",
+      "category": "buttons",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Fournies pour completude de la spec V0.1 (brouillon initial) mais NON utilisees par Kong-II : le jeu reel appelle PC::buttons.pressed(BTN_X)/.repeat(BTN_X,N)."
+    },
+    {
+      "symbol": "Pokitto::Display::clear",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::fillScreen",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::drawPixel",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::drawLine",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 90,
+      "notes": "Algorithme de Bresenham reimplemente (l'AKA n'a pas de primitive ligne generique)."
+    },
+    {
+      "symbol": "Pokitto::Display::drawRect",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::fillRect",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::drawBitmap(x,y,bitmap)",
+      "status": "WRAPPED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Format reel observe (Kong-II) : entete [W,H] uint8 puis donnees 4bpp. BUG CRITIQUE TROUVE ET CORRIGE : chaque LIGNE est alignee sur un octet entier (ceil(W/2) octets/ligne) -- CE N'EST PAS un flux continu de nibbles sur toute l'image. Pour une largeur impaire, traiter l'image comme un flux continu decale chaque ligne d'un demi-octet de plus que la precedente -> cisaillement DIAGONAL qui s'accumule sur toute l'image (repere visuellement au splash screen 'Press Play On Tape' : logo/texte rendus de travers). Confirme sur Ppot_Full.h (131x68, largeur impaire) : 4488 octets reels = 66 octets/ligne (arrondi) x 68, alors qu'un flux continu donnerait 4454. Ce bug touche potentiellement TOUT sprite a largeur impaire, y compris les artefacts observes en bord d'ecran en mode 'vue large' (meme cause probable). Decoder ligne par ligne avec rowBytes = (W+1)/2, jamais en flux continu."
+    },
+    {
+      "symbol": "Pokitto::Display::drawBitmap(x,y,bitmap,flipX,flipY)",
+      "status": "PARTIAL",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 40,
+      "notes": "Surcharge ajoutee pour compiler (2 appels dans Kong-II, ecran titre). Les drapeaux de retournement sont acceptes mais PAS ENCORE appliques -- a implementer si le rendu visuel du titre/selecteur est incorrect."
+    },
+    {
+      "symbol": "Pokitto::Display::setCursor/print/println",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::loadRGBPalette",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Absent du brouillon initial de la spec mais indispensable : tous les jeux 'indexed color' l'utilisent."
+    },
+    {
+      "symbol": "Pokitto::Display::setColor",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::setInvisibleColor",
+      "status": "SUPPORTED",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 100
+    },
+    {
+      "symbol": "Pokitto::Display::persistence",
+      "status": "PARTIAL",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 50,
+      "notes": "Champ accepte mais ignore : le renderer AKA redessine tout chaque frame (pas de redraw partiel comme le Pokitto reel)."
+    },
+    {
+      "symbol": "palettePico",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.1",
+      "confidence": 80,
+      "notes": "Constante fournie par le vrai SDK Pokitto (PokittoLib), ABSENTE des sources de jeu portees (Kong-II l'utilise sans la definir). Chaque port doit la redefinir -- valeurs PICO-8 standard (16 couleurs) reprises dans main.cpp."
+    },
+    {
+      "symbol": "Pokitto::Sound::playSFX",
+      "status": "WRAPPED",
+      "category": "sound",
+      "since": "0.1",
+      "confidence": 60,
+      "notes": "PCM 8-bit non signe (donnees Kong-II) converti a la volee en 16-bit signe puis gb_audio_track_wav::play_raw(). Pas de reechantillonnage de frequence -- a valider sur materiel reel (le codec attend potentiellement 44.1kHz). ATTENTION SEPARE (piege d'integration) : meme correctement implemente, playSFX/playMusicStream restent MUETS si aucune tache ne consomme le mixeur. Voir nouvelle entree 'pokitto_compat audio bring-up'."
+    },
+    {
+      "symbol": "Pokitto::Sound::playMusicStream",
+      "status": "PARTIAL",
+      "category": "sound",
+      "since": "0.1",
+      "confidence": 30,
+      "notes": "Les .raw d'origine (sans entete) doivent etre convertis en .wav (RIFF/WAVE) et deposes sur la SD avant lecture via play_wav(chemin). Script de conversion pas encore ecrit -- fonctionnalite non testee."
+    },
+    {
+      "symbol": "Pokitto::Sound::sfxDataPtr / sfxEndPtr",
+      "status": "WRAPPED",
+      "category": "sound",
+      "since": "0.1",
+      "confidence": 80,
+      "notes": "Simules (pas de vrais pointeurs memoire) : sfxDataPtr==sfxEndPtr signale la fin, mis a jour via is_playing() du codec a chaque frame (Sound::poll(), a appeler explicitement)."
+    },
+    {
+      "symbol": "Pokitto::Sound::playTone / stopTone",
+      "status": "SUPPORTED",
+      "category": "sound",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Implemente (brouillon V0.1 initial) mais jamais appele par Kong-II -- non valide en pratique."
+    },
+    {
+      "symbol": "Pokitto::Cookie::begin",
+      "status": "WRAPPED",
+      "category": "storage",
+      "since": "0.1",
+      "confidence": 90,
+      "notes": "ECART SPEC : signature reelle a 3 arguments -- begin(const char* name, int size, char* data) -- pas begin() sans argument comme documente initialement."
+    },
+    {
+      "symbol": "Pokitto::Cookie::loadCookie / saveCookie",
+      "status": "SUPPORTED",
+      "category": "storage",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Fichier /sdcard/<game_id>/save.dat, conforme a DECISIONS.md."
+    },
+    {
+      "symbol": "Sprites::drawOverwrite / drawSelfMasked / drawPlusMask",
+      "status": "MANUAL",
+      "category": "sprites",
+      "since": "0.1",
+      "confidence": 0,
+      "notes": "Kong-II N'UTILISE PAS la classe Sprites -- tout passe par Pokitto::Display::drawBitmap directement. Pas encore implemente ; a couvrir des qu'un jeu de reference V0.2 en a besoin (haute priorite selon POKITTO_COMPAT_SPEC.md)."
+    },
+    {
+      "symbol": "PROGMEM",
+      "status": "WRAPPED",
+      "category": "other",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "CRITIQUE : macro AVR-Arduino absente sur ESP32. Sans #define PROGMEM (vide), TOUS les headers d'assets (const uint8_t PROGMEM Xxx[] = {...}) echouent a parser, avec une cascade d'erreurs 'n'est pas membre de' qui masque la vraie cause. Un seul #define suffit -- a inclure tres tot (namespace/traduction unit) pour couvrir tous les assets."
+    },
+    {
+      "symbol": "pgm_read_byte",
+      "status": "WRAPPED",
+      "category": "other",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Macro AVR de lecture flash. Sur ESP32 (espace d'adressage unifie), devient un simple dereferencement : #define pgm_read_byte(addr) (*(const uint8_t*)(addr))."
+    },
+    {
+      "symbol": "random(min,max) / random(max)",
+      "status": "WRAPPED",
+      "category": "other",
+      "since": "0.1",
+      "confidence": 90,
+      "notes": "Fonctions Arduino, absentes en environnement natif. Reimplementees via rand() (cstdlib)."
+    },
+    {
+      "symbol": "abs()",
+      "status": "SUPPORTED",
+      "category": "other",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Deja fourni par <cstdlib> -- il suffit de l'inclure (aucune reimplementation necessaire)."
+    },
+    {
+      "symbol": "pokitto_compat audio bring-up (gb_audio_player)",
+      "status": "WRAPPED",
+      "category": "sound",
+      "since": "0.1",
+      "confidence": 90,
+      "notes": "PIEGE CRITIQUE, absent de toute doc initiale : declarer des gb_audio_track_wav et appeler playSFX/playMusicStream ne suffit PAS -- aucun son ne sort tant que (1) les pistes ne sont pas enregistrees aupres d'un gb_audio_player via add_track(), et (2) une tache dediee n'appelle pas player.pool() en boucle (toutes les ~2ms) pour alimenter le FIFO I2S. Symptome observe : silence TOTAL malgre un code par ailleurs correct. Solution : Pokitto::Sound::begin() -- enregistre les pistes, regle le volume materiel (gb_ll_audio_set_volume), demarre la tache de mixage (xTaskCreatePinnedToCore) -- appele automatiquement depuis Pokitto::Core::begin(). A inclure des la V0.1 de tout portage."
+    }
+  ]
 }

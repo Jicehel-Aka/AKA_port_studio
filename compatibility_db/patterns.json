@@ -1,6 +1,16 @@
 {
   "patterns": [
     "Pokitto::",
-    "Sprites::"
+    "Sprites::",
+    "PROGMEM",
+    "pgm_read_byte",
+    "pgm_read_word",
+    "random(",
+    "PC::buttons.",
+    "PS::playSFX",
+    "PS::playMusicStream",
+    "PS::sfxDataPtr",
+    "PS::sfxEndPtr",
+    "palettePico"
   ]
 }

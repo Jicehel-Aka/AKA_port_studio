@@ -658,3 +658,168 @@ fonctionnelle lorsque :
 ✅ Retour loader fonctionnel
 
 ✅ Crédits et licence affichables
+
+---
+
+# Addendum V0.1 — écarts constatés sur Kong-II (jeu de référence)
+
+Le portage effectif de Kong-II a révélé plusieurs écarts entre ce brouillon
+de spec (rédigé avant tout portage réel) et l'API réellement utilisée par un
+jeu Pokitto de référence. Ce document reste la cible V0.1, mais les points
+suivants doivent être lus en priorité par quiconque implémente
+`pokitto_compat` :
+
+## Buttons — API réelle différente du brouillon
+
+Le brouillon documentait `aBtn()`, `bBtn()`, etc. Kong-II (et vraisemblablement
+la plupart des jeux Pokitto réels) utilise en fait :
+
+```cpp
+PC::buttons.pressed(BTN_LEFT)
+PC::buttons.repeat(BTN_LEFT, 1)
+```
+
+Une classe `Buttons` avec des méthodes génériques `pressed(btn)` /
+`repeat(btn, frames)` / `released(btn)`, plus des constantes `BTN_*`. Les deux
+API (`aBtn()` et `pressed()`) doivent être fournies ; `pressed()`/`repeat()`
+est la plus utilisée en pratique.
+
+`pollButtons()` est aussi appelée explicitement par certains jeux
+(`Game::loop()` de Kong-II) — à fournir en no-op si le sondage réel se fait
+ailleurs (ex. dans `Core::update()`).
+
+---
+
+## Sound — bien plus riche que prévu
+
+Le brouillon V0.1 ne prévoyait que `playTone()`/`stopTone()`. Kong-II
+nécessite :
+
+```cpp
+PS::playSFX(const uint8_t* data, uint32_t length);       // PCM 8-bit embarque
+PS::playMusicStream(const char* path, uint8_t loop);      // flux depuis la SD
+PS::sfxDataPtr / PS::sfxEndPtr;                            // etat "en cours" (comparaison de pointeurs)
+```
+
+Sur l'AKA, `gb_audio_track_wav` (composant `gamebuino`) fournit tout ce qu'il
+faut :
+- `play_raw(const int16_t*, size_t)` pour des échantillons PCM en mémoire
+  (idéal pour `playSFX`, après conversion 8-bit non signé → 16-bit signé) ;
+- `play_wav(const char*)` pour un fichier WAV (RIFF) sur la SD (pour
+  `playMusicStream`, après avoir enveloppé les `.raw` d'origine dans un
+  en-tête WAV valide — travail de conversion d'assets à prévoir dans
+  `pokitto2aka`).
+
+`playTone()`/`stopTone()` (le brouillon initial) ne sont en pratique jamais
+appelées par un jeu réel constaté à ce jour.
+
+---
+
+## Cookie — signature réelle à 3 arguments
+
+Le brouillon documentait `bool begin();`. La réalité :
+
+```cpp
+cookie.begin("KONGII", sizeof(cookie), (char*)&cookie);
+```
+
+`bool begin(const char* name, int size, char* data);` — le nom sert
+d'identifiant, `size`/`data` décrivent le blob à charger/sauvegarder tel
+quel (correspond à `/sdcard/<game_id>/save.dat`).
+
+---
+
+## Display::drawBitmap — format réel + piège de performance
+
+Format constaté (assets Kong-II, ex. `Kong_FacingRight_F1.h`) :
+
+```cpp
+const uint8_t Nom[] = { W, H, <données 4bpp, 2 pixels/octet, ligne par ligne> };
+```
+
+**Piège important** : ne JAMAIS implémenter `drawBitmap` avec un `fillRect`
+appelé pixel par pixel — un sprite Kong-II courant fait des centaines de
+pixels, dessinés plusieurs fois par frame ; c'est bien trop lent pour un jeu
+à défilement. Décoder dans un buffer temporaire (PSRAM) puis faire **un
+seul** appel `drawImage()`/blit rapide.
+
+Deux jeux référence testés utilisent aussi `drawBitmap(x, y, bitmap, flipX,
+flipY)` (2 booléens de retournement) — prévoir la surcharge dès le départ.
+
+---
+
+## Macros/fonctions Arduino-AVR indispensables
+
+Aucune des specs V0.1 initiales ne mentionnait ce point, pourtant il bloque
+la compilation de **tous** les fichiers d'assets si absent :
+
+```cpp
+#define PROGMEM                                   // vide sur ESP32 (tout le const est deja en flash)
+#define pgm_read_byte(addr) (*(const uint8_t*)(addr))
+inline long random(long max);
+inline long random(long min, long max);
+```
+
+`PROGMEM` non défini casse le *parsing* (pas juste la sémantique) des
+déclarations `const uint8_t PROGMEM Nom[] = {...}`, ce qui produit une
+cascade d'erreurs « n'est pas membre de » sans rapport apparent avec la
+vraie cause. À fournir dès la V0.1, avant même le premier jeu de test.
+
+---
+
+## palettePico — absente des sources de jeu
+
+`PD::loadRGBPalette(palettePico)` est appelé par Kong-II sans que
+`palettePico` soit défini nulle part dans son dépôt : c'est une constante du
+vrai SDK Pokitto (PokittoLib), pas du jeu. `pokitto_compat` (ou le projet
+généré) doit la fournir — palette PICO-8 standard (16 couleurs).
+
+---
+
+## Addendum V0.1.1 — deux pièges critiques trouvés après premiers tests sur matériel réel
+
+Ces deux bugs ne sont apparus qu'une fois Kong-II compilé et lancé sur la
+console (invisibles à la simple lecture du code) — à vérifier en priorité
+sur tout futur portage.
+
+### drawBitmap — alignement des lignes sur l'octet (piège majeur)
+
+Le format 4bpp de Kong-II n'est **pas** un flux continu de nibbles sur toute
+l'image : **chaque ligne est alignée sur un octet entier**
+(`rowBytes = (W+1)/2`, pas `W*H/2` réparti en continu). Pour une image de
+largeur **impaire**, traiter les données comme un flux continu décale
+progressivement chaque ligne d'un demi-octet de plus que la précédente —
+l'image entière apparaît cisaillée en diagonale.
+
+Confirmé sur `Ppot_Full.h` (131×68, largeur impaire) : 4488 octets de données
+réelles = 66 octets/ligne (arrondi) × 68 lignes, alors qu'un flux continu en
+donnerait 4454.
+
+Symptôme observé : le logo/texte du splash screen "Press Play On Tape"
+rendu de travers, ainsi que des artefacts sur les bords en mode "vue large"
+(même cause probable : autres sprites à largeur impaire).
+
+```cpp
+int rowBytes = (w + 1) / 2;               // JAMAIS w*h/2 en continu
+for (int row = 0; row < h; ++row) {
+    const uint8_t* rowPx = px + row * rowBytes;   // repart d'un octet neuf a chaque ligne
+    for (int col = 0; col < w; ++col) {
+        uint8_t b = rowPx[col >> 1];
+        uint8_t idx = (col & 1) ? (b & 0x0F) : (b >> 4);
+        // ...
+    }
+}
+```
+
+### Audio — l'amorçage du lecteur est une étape à part entière
+
+Déclarer des `gb_audio_track_wav` et appeler `playSFX()`/`playMusicStream()`
+ne suffit **pas** : sur l'AKA, aucun son ne sort tant que (1) les pistes ne
+sont pas enregistrées auprès d'un `gb_audio_player` via `add_track()`, et
+(2) une tâche dédiée n'appelle pas `player.pool()` en boucle (~2ms) pour
+alimenter le FIFO I2S. Sans cette étape, le jeu tourne normalement mais reste
+**totalement silencieux**, sans aucune erreur de compilation ni de log.
+
+À fournir dès la V0.1 (`Pokitto::Sound::begin()`, appelé automatiquement
+depuis `Pokitto::Core::begin()`) — pas quelque chose à découvrir jeu par
+jeu.
