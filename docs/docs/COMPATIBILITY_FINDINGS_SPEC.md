@@ -1,0 +1,1 @@
+Specification for compatibility findings exported to compatibility_db.
