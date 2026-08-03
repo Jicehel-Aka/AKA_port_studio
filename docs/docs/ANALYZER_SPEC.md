@@ -1,1 +1,0 @@
-Analyzer specification for pokitto2aka analyze command.
