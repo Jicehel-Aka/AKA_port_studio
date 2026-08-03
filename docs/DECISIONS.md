@@ -772,3 +772,33 @@ et reproductibles sur l'ESP32-S3 de l'AKA (protection memoire stricte).
 A garder en tete pour tout futur portage : un crash au premier lancement
 d'une partie (souvent juste apres l'ecran titre) est un bon candidat pour
 ce pattern.
+
+---
+
+# Addendum — "automatise" ne veut pas dire "sans intervention humaine"
+
+## Constat
+
+En cherchant a generer automatiquement le champ "description" du meta.json
+du launcher, aucune source fiable n'existe dans ce corpus (ni description
+GitHub "About", ni README.md exploitable -- souvent absent ou reduit a un
+titre+banniere). Une premiere version generait un texte de repli
+generique en silence -- ce n'est pas la bonne approche.
+
+## Decision retenue
+
+✅ **"Automatiser" signifie guider et verifier, pas deviner a la place de
+l'utilisateur.** Le generateur (`pokitto2aka/src/generators/launcher_assets.py`)
+ne comble jamais silencieusement une information manquante par un texte
+invente : il la laisse explicitement vide et l'ajoute a une liste
+`questions_for_user` (a poser lors de la reprise du portage par un humain).
+
+✅ En parallele, le generateur verifie systematiquement la presence des
+elements IMPORTANTS pour le respect de l'auteur original (pas seulement la
+description) : fichier LICENSE present dans le depot, auteur renseigne,
+URL du depot source renseignee -- exposes dans un `checklist` a chaque
+execution.
+
+✅ Principe general pour `pokitto2aka` : toute information qui ne peut pas
+etre determinee avec un niveau de confiance suffisant doit devenir une
+question posee a l'utilisateur, jamais une valeur devinee silencieusement.
