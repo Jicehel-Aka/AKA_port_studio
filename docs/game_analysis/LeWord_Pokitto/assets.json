@@ -1,0 +1,18 @@
+{
+  "images": 194,
+  "sounds": 14,
+  "music": 3,
+  "fonts": 0,
+  "images_sample": [
+    "distributable/LeWord_Banner-01.png",
+    "distributable/Screenshot_00.png",
+    "distributable/Screenshot_02.png",
+    "distributable/Icon24x24.png",
+    "distributable/LeWord_Banner-01.jpg"
+  ],
+  "music_sample": [
+    "music/LeWord03.raw",
+    "music/LeWord02.raw",
+    "music/LeWord04.raw"
+  ]
+}

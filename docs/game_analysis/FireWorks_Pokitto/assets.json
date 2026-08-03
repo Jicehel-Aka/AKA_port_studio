@@ -1,0 +1,18 @@
+{
+  "images": 188,
+  "sounds": 3,
+  "music": 3,
+  "fonts": 0,
+  "images_sample": [
+    "distributable/Screenshots_03.png",
+    "distributable/Screenshots_04.png",
+    "distributable/Tape.png",
+    "distributable/Screenshots_02.png",
+    "distributable/Banner.png"
+  ],
+  "music_sample": [
+    "music/Fwork_02.raw",
+    "music/Fwork_01.raw",
+    "music/Fwork_03.raw"
+  ]
+}

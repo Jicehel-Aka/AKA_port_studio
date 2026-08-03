@@ -1,0 +1,20 @@
+{
+  "images": 378,
+  "sounds": 22,
+  "music": 30,
+  "fonts": 3,
+  "images_sample": [
+    "distibutable/Screenshot01.png",
+    "distibutable/Karateka_Icon_24x24.png",
+    "distibutable/Karateka_POPBanner.png",
+    "distibutable/Screenshot02.png",
+    "distibutable/Screenshot09.png"
+  ],
+  "music_sample": [
+    "music/karate07.raw",
+    "music/karate02.raw",
+    "music/karate01.raw",
+    "music/karate19.raw",
+    "music/karate03.raw"
+  ]
+}

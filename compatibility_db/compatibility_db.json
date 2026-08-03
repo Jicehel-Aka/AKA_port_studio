@@ -378,6 +378,78 @@
       "since": "0.2.1",
       "confidence": 90,
       "notes": "Galaxy Fighter : CaptureController::move(), cas CapturedPlayer::None (etat par defaut, avant toute capture), deferencait this->enemy (jamais initialise a ce stade) sans verification. Sur le vrai Pokitto (Cortex-M0), lire un champ a faible decalage sur un pointeur nul ne fait PAS planter (comportement indefini silencieux, retourne une valeur garbage sans faute materielle) -- le jeu continue normalement. Sur l'AKA (ESP32-S3, protection memoire stricte), la MEME operation declenche un crash (Guru Meditation Error / LoadProhibited) immediat. Symptome trompeur : le redemarrage automatique post-crash peut etre confondu avec un retour au loader intentionnel (meme sequence de boot visible a l'ecran). LECON GENERALE pour pokitto2aka : le code source d'un jeu Pokitto peut contenir des dereferences de pointeurs non initialises qui 'marchent par hasard' sur le Cortex-M0 d'origine sans jamais planter, et qui deviennent des crashes reels et reproductibles sur l'ESP32-S3 de l'AKA. Tout crash 'Guru Meditation Error / LoadProhibited' au premier lancement d'une partie doit faire suspecter ce pattern en priorite, PAS un probleme de bouton/mapping. Fix applique : ajout d'une garde nulle minimale au point de crash precis, sans modifier le reste de la logique du jeu."
+    },
+    {
+      "symbol": "Pokitto::Display::drawFastHLine / drawFastVLine",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (FireWorks_Pokitto, LeWord_Pokitto) -- non implemente. Variantes optimisees de drawLine restreintes a un seul axe. Peut probablement se rabattre sur drawLine()/drawColumn() en interne sans perte fonctionnelle."
+    },
+    {
+      "symbol": "Pokitto::Display::fillCircle",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (FireWorks_Pokitto). Non implemente -- necessite un algorithme de remplissage de cercle (ex: methode de Bresenham) ecrivant dans le framebuffer indexe."
+    },
+    {
+      "symbol": "Pokitto::Display::fillRectangle / drawRectangle",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 80,
+      "notes": "ECART DE NOMMAGE trouve par analyse automatique (ButtonsTrail_Pokitto) : certains jeux utilisent le nom complet 'Rectangle' au lieu de 'Rect' (fillRect/drawRect deja implementes). Fix simple : ajouter fillRectangle()/drawRectangle() comme ALIAS appelant directement fillRect()/drawRect()."
+    },
+    {
+      "symbol": "Pokitto::Display::adjustCharStep",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (FireWorks_Pokitto, LeWord_Pokitto). Ajuste l'espacement entre caracteres du rendu texte -- non implemente (notre police 5x7 maison a un espacement fixe)."
+    },
+    {
+      "symbol": "Pokitto::Display::textWrap",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (les 3 jeux : FireWorks, ButtonsTrail, LeWord). Active/desactive le retour a la ligne automatique du texte -- non implemente (notre print() actuel ne gere pas le retour a la ligne automatique)."
+    },
+    {
+      "symbol": "Depots non-Pokitto malgre un nom proche (Karateka / KaratekaFX)",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.3",
+      "confidence": 100,
+      "notes": "Press-Play-On-Tape/Karateka et Press-Play-On-Tape/KaratekaFX sont en realite des jeux ARDUBOY / ARDUBOY FX (include Arduboy2Ext.h, dossier fxdata), SANS AUCUN RAPPORT avec Pokitto malgre l'absence de suffixe distinctif dans le nom du depot (contrairement a la convention '_Pokitto' des autres titres du meme auteur). L'analyseur doit TOUJOURS verifier la presence reelle de #include \"Pokitto.h\"/Pokitto::Core avant de considerer un depot comme un projet Pokitto exploitable -- ne jamais se fier au seul nom du depot."
+    },
+    {
+      "symbol": "Pokitto::Core::getTime",
+      "status": "SUPPORTED",
+      "category": "core",
+      "since": "0.1",
+      "confidence": 100,
+      "notes": "Deja implemente depuis la V0.1 (retourne le temps ecoule en ms) mais jamais documente dans cette base -- oubli corrige suite a l'analyse automatique de Karateka_Pokitto qui l'utilise (2 appels)."
+    },
+    {
+      "symbol": "Pokitto::Display::directBitmap",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (Karateka_Pokitto, 14 appels). Non implemente -- semble etre une variante de drawBitmap ecrivant peut-etre directement au LCD/framebuffer sans passer par le meme chemin que drawBitmap standard. A investiguer : lire le code source de Karateka_Pokitto pour la signature exacte avant implementation."
+    },
+    {
+      "symbol": "Pokitto::Display::clearLCD",
+      "status": "MANUAL",
+      "category": "display",
+      "since": "0.3",
+      "confidence": 0,
+      "notes": "Trouve par analyse automatique (Karateka_Pokitto, 2 appels). Variante de clear() -- peut-etre un clear immediat du LCD physique distinct du framebuffer interne. A investiguer avant implementation."
     }
   ]
 }

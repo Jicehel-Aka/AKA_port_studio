@@ -1,0 +1,23 @@
+{
+  "Pokitto::Display::drawBitmap": 163,
+  "Pokitto::Core::pressed": 84,
+  "Pokitto::Display::print": 28,
+  "Pokitto::Core::repeat": 24,
+  "Pokitto::Display::setCursor": 22,
+  "Pokitto::Display::drawLine": 19,
+  "Pokitto::Display::setColor": 17,
+  "Pokitto::Display::directBitmap": 14,
+  "Pokitto::Core::frameCount": 10,
+  "Pokitto::Core::setFrameRate": 4,
+  "Pokitto::Core::update": 2,
+  "Pokitto::Display::clearLCD": 2,
+  "Pokitto::Core::getTime": 2,
+  "Pokitto::Core::begin": 1,
+  "Pokitto::Display::loadRGBPalette": 1,
+  "Pokitto::Display::persistence": 1,
+  "Pokitto::Display::setInvisibleColor": 1,
+  "Pokitto::Display::setFont": 1,
+  "Pokitto::Core::isRunning": 1,
+  "Pokitto::Display::clear": 1,
+  "Pokitto::Core::pollButtons": 1
+}

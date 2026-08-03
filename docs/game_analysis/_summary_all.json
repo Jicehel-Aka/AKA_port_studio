@@ -1,0 +1,188 @@
+{
+  "Karateka": {
+    "game": "Karateka",
+    "is_pokitto_project": false,
+    "analysis": {
+      "total_files": 18,
+      "by_extension": {
+        "ino": 9,
+        "h": 8,
+        "cpp": 1
+      },
+      "total_lines": 5034,
+      "is_pokitto_project": false
+    }
+  },
+  "KaratekaFX": {
+    "game": "KaratekaFX",
+    "is_pokitto_project": false,
+    "analysis": {
+      "total_files": 21,
+      "by_extension": {
+        "ino": 10,
+        "h": 8,
+        "cpp": 1,
+        "hpp": 2
+      },
+      "total_lines": 5845,
+      "is_pokitto_project": false
+    }
+  },
+  "FireWorks_Pokitto": {
+    "game": "FireWorks_Pokitto",
+    "is_pokitto_project": true,
+    "analysis": {
+      "total_files": 234,
+      "by_extension": {
+        "h": 221,
+        "cpp": 12,
+        "hpp": 1
+      },
+      "total_lines": 9527,
+      "is_pokitto_project": true
+    },
+    "assets": {
+      "images": 188,
+      "sounds": 3,
+      "music": 3,
+      "fonts": 0,
+      "images_sample": [
+        "distributable/Screenshots_03.png",
+        "distributable/Screenshots_04.png",
+        "distributable/Tape.png",
+        "distributable/Screenshots_02.png",
+        "distributable/Banner.png"
+      ],
+      "music_sample": [
+        "music/Fwork_02.raw",
+        "music/Fwork_01.raw",
+        "music/Fwork_03.raw"
+      ]
+    },
+    "api_symbol_count": 23,
+    "status_counts": {
+      "WRAPPED": 2,
+      "SUPPORTED": 14,
+      "UNKNOWN": 4,
+      "PARTIAL": 3
+    }
+  },
+  "MineSweeper_Pokitto": {
+    "game": "MineSweeper_Pokitto",
+    "is_pokitto_project": true,
+    "analysis": {
+      "total_files": 125,
+      "by_extension": {
+        "h": 118,
+        "cpp": 7
+      },
+      "total_lines": 6428,
+      "is_pokitto_project": true
+    },
+    "assets": {
+      "images": 98,
+      "sounds": 8,
+      "music": 7,
+      "fonts": 0,
+      "images_sample": [
+        "distributable/Pic4.png",
+        "distributable/MineSweeper_POPBanner.png",
+        "distributable/Pic1.png",
+        "distributable/Pic2.png",
+        "distributable/MineSweeper_36x36.png"
+      ],
+      "music_sample": [
+        "distributable/music/mineswe1.raw",
+        "distributable/music/mineswe2.raw",
+        "distributable/music/mineswe3.raw",
+        "distributable/music/mineswe4.raw",
+        "distributable/music/mineswe5.raw"
+      ]
+    },
+    "api_symbol_count": 19,
+    "status_counts": {
+      "WRAPPED": 2,
+      "SUPPORTED": 15,
+      "PARTIAL": 2
+    }
+  },
+  "ButtonsTrail_Pokitto": {
+    "game": "ButtonsTrail_Pokitto",
+    "is_pokitto_project": true,
+    "analysis": {
+      "total_files": 208,
+      "by_extension": {
+        "h": 197,
+        "cpp": 11
+      },
+      "total_lines": 9800,
+      "is_pokitto_project": true
+    },
+    "assets": {
+      "images": 146,
+      "sounds": 1,
+      "music": 11,
+      "fonts": 0,
+      "images_sample": [
+        "distributable/screenhot_03.png",
+        "distributable/screenhot_02.png",
+        "distributable/screenhot_00.png",
+        "distributable/DarkTrails_Banner.png",
+        "distributable/DarkTrails_24x24Icon.png"
+      ],
+      "music_sample": [
+        "music/Tone_06.raw",
+        "music/Tone_09.raw",
+        "music/Tone_03.raw",
+        "music/Tone_08.raw",
+        "music/Tone_00.raw"
+      ]
+    },
+    "api_symbol_count": 23,
+    "status_counts": {
+      "WRAPPED": 2,
+      "SUPPORTED": 15,
+      "UNKNOWN": 3,
+      "PARTIAL": 3
+    }
+  },
+  "LeWord_Pokitto": {
+    "game": "LeWord_Pokitto",
+    "is_pokitto_project": true,
+    "analysis": {
+      "total_files": 222,
+      "by_extension": {
+        "h": 212,
+        "cpp": 9,
+        "hpp": 1
+      },
+      "total_lines": 16881,
+      "is_pokitto_project": true
+    },
+    "assets": {
+      "images": 194,
+      "sounds": 14,
+      "music": 3,
+      "fonts": 0,
+      "images_sample": [
+        "distributable/LeWord_Banner-01.png",
+        "distributable/Screenshot_00.png",
+        "distributable/Screenshot_02.png",
+        "distributable/Icon24x24.png",
+        "distributable/LeWord_Banner-01.jpg"
+      ],
+      "music_sample": [
+        "music/LeWord03.raw",
+        "music/LeWord02.raw",
+        "music/LeWord04.raw"
+      ]
+    },
+    "api_symbol_count": 26,
+    "status_counts": {
+      "WRAPPED": 2,
+      "SUPPORTED": 17,
+      "PARTIAL": 2,
+      "UNKNOWN": 5
+    }
+  }
+}

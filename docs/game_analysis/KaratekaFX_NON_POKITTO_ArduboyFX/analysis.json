@@ -1,0 +1,11 @@
+{
+  "total_files": 21,
+  "by_extension": {
+    "ino": 10,
+    "h": 8,
+    "cpp": 1,
+    "hpp": 2
+  },
+  "total_lines": 5845,
+  "is_pokitto_project": false
+}

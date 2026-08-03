@@ -1,0 +1,20 @@
+{
+  "images": 146,
+  "sounds": 1,
+  "music": 11,
+  "fonts": 0,
+  "images_sample": [
+    "distributable/screenhot_03.png",
+    "distributable/screenhot_02.png",
+    "distributable/screenhot_00.png",
+    "distributable/DarkTrails_Banner.png",
+    "distributable/DarkTrails_24x24Icon.png"
+  ],
+  "music_sample": [
+    "music/Tone_06.raw",
+    "music/Tone_09.raw",
+    "music/Tone_03.raw",
+    "music/Tone_08.raw",
+    "music/Tone_00.raw"
+  ]
+}

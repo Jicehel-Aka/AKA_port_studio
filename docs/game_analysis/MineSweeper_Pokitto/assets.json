@@ -1,0 +1,20 @@
+{
+  "images": 98,
+  "sounds": 8,
+  "music": 7,
+  "fonts": 0,
+  "images_sample": [
+    "distributable/Pic4.png",
+    "distributable/MineSweeper_POPBanner.png",
+    "distributable/Pic1.png",
+    "distributable/Pic2.png",
+    "distributable/MineSweeper_36x36.png"
+  ],
+  "music_sample": [
+    "distributable/music/mineswe1.raw",
+    "distributable/music/mineswe2.raw",
+    "distributable/music/mineswe3.raw",
+    "distributable/music/mineswe4.raw",
+    "distributable/music/mineswe5.raw"
+  ]
+}
