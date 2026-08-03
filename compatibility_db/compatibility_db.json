@@ -357,11 +357,11 @@
     },
     {
       "symbol": "Conflit bouton C / retour au loader (Galaxy Fighter)",
-      "status": "MANUAL",
+      "status": "SUPPORTED",
       "category": "buttons",
       "since": "0.2.1",
-      "confidence": 20,
-      "notes": "PROBLEME OUVERT, NON RESOLU. Sur un boitier AKA precis, presser le bouton C SEUL (confirme par l'utilisateur, pas une confusion avec le combo systeme RUN+MENU) declenche le retour au loader au lieu du comportement attendu par le jeu (Galaxy Fighter : C = 'insert credit'). Deux hypotheses logicielles ECARTEES apres verification du code : (1) pas de decalage d'encodage entre gb_buttons::KEY_C et EXPANDER_KEY_C (memes valeurs) ; (2) pas de donnee perimee (g_core.buttons.state() est rafraichi par g_core.pool() dans input_poll(), juste avant toute lecture). Hypothese restante : chevauchement materiel reel (le bouton C activerait aussi, electriquement, les bits RUN et/ou MENU sur CE boitier specifique) -- necessite un relogage du bitmask brut au moment de l'appui pour confirmer. Contournement applique en attendant : le jeu accepte aussi BTN_A pour lancer la partie (ne depend plus uniquement de C)."
+      "confidence": 100,
+      "notes": "FAUSSE PISTE, RESOLUE. Le bouton C n'a jamais eu de probleme (confirme par trace : raw=0x4000, C=1, RUN=0, MENU=0 -- aucun chevauchement materiel). Ce qui ressemblait a un retour au loader etait en realite un CRASH (Guru Meditation Error, LoadProhibited) suivi d'un redemarrage automatique, qui visuellement rejoue la sequence de boot -- facile a confondre avec un retour au loader intentionnel. Vraie cause : voir nouvelle entree 'Enemy* nullptr non garde (CaptureController)'."
     },
     {
       "symbol": "Pattern : boutons dupliques pour contourner un conflit systeme",
@@ -370,6 +370,14 @@
       "since": "0.2.1",
       "confidence": 70,
       "notes": "Pour les jeux de style arcade (insert credit puis start, ex. Galaxy Fighter), le bouton d'origine (souvent C) peut entrer en conflit avec des combos systeme AKA (RUN+MENU=retour loader). Solution simple et sure : faire accepter la MEME action par un second bouton (ex. BTN_A) en plus du bouton d'origine (garde via ||), au lieu de remplacer/renommer -- le jeu reste jouable meme si le conflit sur le bouton d'origine n'est pas resolu."
+    },
+    {
+      "symbol": "Deference de pointeur nul tolere sur Cortex-M0, pas sur ESP32 (CaptureController::move)",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.2.1",
+      "confidence": 90,
+      "notes": "Galaxy Fighter : CaptureController::move(), cas CapturedPlayer::None (etat par defaut, avant toute capture), deferencait this->enemy (jamais initialise a ce stade) sans verification. Sur le vrai Pokitto (Cortex-M0), lire un champ a faible decalage sur un pointeur nul ne fait PAS planter (comportement indefini silencieux, retourne une valeur garbage sans faute materielle) -- le jeu continue normalement. Sur l'AKA (ESP32-S3, protection memoire stricte), la MEME operation declenche un crash (Guru Meditation Error / LoadProhibited) immediat. Symptome trompeur : le redemarrage automatique post-crash peut etre confondu avec un retour au loader intentionnel (meme sequence de boot visible a l'ecran). LECON GENERALE pour pokitto2aka : le code source d'un jeu Pokitto peut contenir des dereferences de pointeurs non initialises qui 'marchent par hasard' sur le Cortex-M0 d'origine sans jamais planter, et qui deviennent des crashes reels et reproductibles sur l'ESP32-S3 de l'AKA. Tout crash 'Guru Meditation Error / LoadProhibited' au premier lancement d'une partie doit faire suspecter ce pattern en priorite, PAS un probleme de bouton/mapping. Fix applique : ajout d'une garde nulle minimale au point de crash precis, sans modifier le reste de la logique du jeu."
     }
   ]
 }

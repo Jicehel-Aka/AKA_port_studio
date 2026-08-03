@@ -735,3 +735,40 @@ moment de l'appui pour continuer l'investigation.
 souvent C), faire accepter la MEME action par un second bouton (BTN_A) en
 plus de l'original, plutot que de dependre d'un seul bouton potentiellement
 affecte par un conflit materiel non caracterise.
+
+---
+
+# Addendum — le "conflit bouton C" etait une fausse piste (vrai crash trouve)
+
+## Constat
+
+L'entree precedente ("Conflit bouton C / retour au loader") s'est reveleE
+etre une FAUSSE PISTE apres avoir enfin obtenu les logs de diagnostic
+demandes : le bouton C n'a jamais eu de probleme (aucun chevauchement de
+bits materiel). Ce qui ressemblait a un retour au loader etait en realite
+un CRASH (Guru Meditation Error / LoadProhibited) suivi d'un redemarrage
+automatique -- la sequence de boot visible a l'ecran ressemble facilement
+a un retour au loader intentionnel, d'ou la confusion initiale (la mienne
+comme celle de l'utilisateur).
+
+Vraie cause : `CaptureController::move()` deferencait un pointeur
+`Enemy*` jamais initialise (etat par defaut, avant toute capture). Sur le
+Cortex-M0 du vrai Pokitto, cette lecture invalide ne plante pas
+(comportement indefini "silencieux") ; sur l'ESP32-S3 de l'AKA, la
+protection memoire est stricte et ca crashe immediatement.
+
+## Decision retenue
+
+✅ **Priorite de diagnostic a revoir** : face a un "retour au loader"
+inattendu ou un comportement qui ressemble a un reboot, VERIFIER D'ABORD
+les logs de crash (Guru Meditation Error) avant de suspecter un probleme
+de bouton/mapping -- un redemarrage post-crash peut visuellement imiter un
+retour au loader intentionnel.
+
+✅ Le code source d'un jeu Pokitto peut contenir des dereferences de
+pointeurs non initialises qui "marchent par hasard" sur le Cortex-M0
+d'origine (lecture memoire non fatale) mais deviennent des crashes reels
+et reproductibles sur l'ESP32-S3 de l'AKA (protection memoire stricte).
+A garder en tete pour tout futur portage : un crash au premier lancement
+d'une partie (souvent juste apres l'ecran titre) est un bon candidat pour
+ce pattern.
