@@ -823,3 +823,22 @@ alimenter le FIFO I2S. Sans cette étape, le jeu tourne normalement mais reste
 À fournir dès la V0.1 (`Pokitto::Sound::begin()`, appelé automatiquement
 depuis `Pokitto::Core::begin()`) — pas quelque chose à découvrir jeu par
 jeu.
+
+---
+
+# Addendum V0.2.1 — framebuffer non initialise (trouve sur Galaxy Fighter)
+
+`heap_caps_malloc()` (PSRAM, ESP-IDF) ne met JAMAIS a zero la memoire
+allouee. Le vrai Pokitto demarre avec un framebuffer physiquement a zero.
+Certains jeux (Galaxy Fighter) ne font JAMAIS `PD::clear()` eux-memes au
+demarrage -- ils comptent sur ce zero initial, exactement comme sur le
+materiel d'origine.
+
+**Consequence si on l'oublie** : le tout premier ecran affiche du bruit
+colore aleatoire (les residus de la PSRAM, decodes via la palette) au lieu
+d'un fond noir propre -- visible typiquement sur l'ecran de demarrage/logo.
+
+**A appliquer systematiquement** : tout buffer PSRAM qu'un jeu peut lire
+avant de l'avoir lui-meme rempli (screenbuffer, mais potentiellement
+d'autres a l'avenir) doit etre explicitement mis a zero (`memset`) juste
+apres l'allocation, jamais suppose "propre par defaut".

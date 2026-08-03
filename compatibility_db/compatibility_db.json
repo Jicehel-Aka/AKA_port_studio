@@ -330,6 +330,46 @@
       "since": "0.2",
       "confidence": 60,
       "notes": "fontC64 (comme palettePico) est fournie par le vrai SDK Pokitto, ABSENTE des sources de jeux portes. Aucune police Pokitto reelle n'etant disponible, une police 5x7 maison a ete generee par rendu programmatique (voir pokitto_compat/Font5x7.h) et exposee sous le nom fontC64. Couvre uniquement espace..Z (majuscules, chiffres, ponctuation de base) ; setFont() accepte un pointeur de police mais une seule police est actuellement utilisable."
+    },
+    {
+      "symbol": "Pokitto::Display::screenbuffer (allocation initiale)",
+      "status": "WRAPPED",
+      "category": "display",
+      "since": "0.2.1",
+      "confidence": 95,
+      "notes": "BUG TROUVE ET CORRIGE : heap_caps_malloc() NE MET PAS A ZERO la memoire allouee. Le vrai Pokitto demarre avec un framebuffer a zero (noir) ; certains jeux (Galaxy Fighter) ne font JAMAIS PD::clear()/fillScreen() explicitement au demarrage -- ils comptent sur ce zero initial (comme le vrai materiel). Sans memset() a l'allocation, le premier affichage montre les residus aleatoires de la PSRAM decodes via la palette (points de couleurs au lieu de noir, visible sur le splash screen). Fix : memset(screenbuffer, 0, taille) juste apres heap_caps_malloc(), dans ensureBuffers()."
+    },
+    {
+      "symbol": "Collision de macro SCREEN_WIDTH (jeu vs SDK AKA)",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.2.1",
+      "confidence": 80,
+      "notes": "Galaxy Fighter definit sa propre constante SCREEN_WIDTH=200 (largeur LOGIQUE de la zone de jeu Pokitto), qui rentre en collision avec gb_common.h du SDK AKA qui definit DEJA SCREEN_WIDTH=320 (largeur PHYSIQUE ecran). Un simple #define en double produit un avertissement et une valeur incoherente selon l'ordre d'inclusion. Fix applique : #undef SCREEN_WIDTH juste avant la redefinition du jeu, dans son propre Constants.h. A VERIFIER SYSTEMATIQUEMENT pour tout futur portage : chercher toute macro du jeu qui pourrait recouper un nom deja utilise par gb_common.h/gb_core.h (SCREEN_WIDTH, SCREEN_HEIGHT, etc.)."
+    },
+    {
+      "symbol": "Includes prefixes 'src/' (reliquat de l'arborescence d'origine)",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.2.1",
+      "confidence": 90,
+      "notes": "Kong-II n'en avait AUCUN (verifie), mais Galaxy Fighter en avait 7, tous concentres dans UN SEUL fichier (states/PlayGameState.h) alors que le reste du projet utilisait des chemins relatifs corrects. NE PAS SUPPOSER qu'un jeu suit le meme pattern qu'un jeu precedent : grep '#include \"src/' sur CHAQUE nouveau jeu porte, meme si le jeu de reference precedent n'en avait pas."
+    },
+    {
+      "symbol": "Conflit bouton C / retour au loader (Galaxy Fighter)",
+      "status": "MANUAL",
+      "category": "buttons",
+      "since": "0.2.1",
+      "confidence": 20,
+      "notes": "PROBLEME OUVERT, NON RESOLU. Sur un boitier AKA precis, presser le bouton C SEUL (confirme par l'utilisateur, pas une confusion avec le combo systeme RUN+MENU) declenche le retour au loader au lieu du comportement attendu par le jeu (Galaxy Fighter : C = 'insert credit'). Deux hypotheses logicielles ECARTEES apres verification du code : (1) pas de decalage d'encodage entre gb_buttons::KEY_C et EXPANDER_KEY_C (memes valeurs) ; (2) pas de donnee perimee (g_core.buttons.state() est rafraichi par g_core.pool() dans input_poll(), juste avant toute lecture). Hypothese restante : chevauchement materiel reel (le bouton C activerait aussi, electriquement, les bits RUN et/ou MENU sur CE boitier specifique) -- necessite un relogage du bitmask brut au moment de l'appui pour confirmer. Contournement applique en attendant : le jeu accepte aussi BTN_A pour lancer la partie (ne depend plus uniquement de C)."
+    },
+    {
+      "symbol": "Pattern : boutons dupliques pour contourner un conflit systeme",
+      "status": "SUPPORTED",
+      "category": "buttons",
+      "since": "0.2.1",
+      "confidence": 70,
+      "notes": "Pour les jeux de style arcade (insert credit puis start, ex. Galaxy Fighter), le bouton d'origine (souvent C) peut entrer en conflit avec des combos systeme AKA (RUN+MENU=retour loader). Solution simple et sure : faire accepter la MEME action par un second bouton (ex. BTN_A) en plus du bouton d'origine (garde via ||), au lieu de remplacer/renommer -- le jeu reste jouable meme si le conflit sur le bouton d'origine n'est pas resolu."
     }
   ]
 }

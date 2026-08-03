@@ -657,3 +657,81 @@ par le vrai SDK Pokitto et absentes des depots de jeux portes. Une police
 5x7 maison a ete generee par rendu programmatique (voir
 `pokitto_compat/Font5x7.h`) plutot que de tenter de reconstituer la police
 d'origine a la main.
+
+---
+
+# Addendum — suite du portage Galaxy Fighter (debogage sur materiel reel)
+
+## Framebuffer non initialise (points de couleur au demarrage)
+
+## Constat
+
+`heap_caps_malloc()` ne met PAS a zero la memoire allouee. Galaxy Fighter ne
+fait jamais `PD::clear()` au demarrage (il compte, comme sur le vrai
+Pokitto, sur un framebuffer deja a zero/noir). Sans precaution, le premier
+affichage montre les residus aleatoires de la PSRAM (bruit colore).
+
+## Decision retenue
+
+✅ `Display::ensureBuffers()` fait un `memset(screenbuffer, 0, ...)`
+immediatement apres l'allocation. Regle generale a appliquer a TOUT buffer
+PSRAM expose directement a un jeu (le jeu peut legitimement supposer un
+etat initial "propre" comme sur le vrai materiel).
+
+---
+
+## SCREEN_WIDTH : collision entre constante du jeu et constante du SDK
+
+## Constat
+
+Galaxy Fighter definit `SCREEN_WIDTH=200` (largeur logique de sa zone de
+jeu). Le SDK AKA (`gb_common.h`) definit DEJA `SCREEN_WIDTH=320` (largeur
+physique ecran). Une redefinition en double = avertissement + risque de
+valeur incoherente selon l'ordre d'inclusion dans chaque fichier.
+
+## Decision retenue
+
+✅ `#undef` la macro juste avant que le jeu la redefinisse a sa propre
+valeur, dans le fichier du jeu concerne (pas dans le SDK, qu'on ne modifie
+jamais). A verifier systematiquement sur tout nouveau portage : toute
+constante nommee de facon generique (SCREEN_WIDTH, SCREEN_HEIGHT, WIDTH,
+HEIGHT...) est un candidat a la collision.
+
+---
+
+## Ne pas supposer qu'un pattern d'un jeu se repete sur le suivant
+
+## Constat
+
+Kong-II n'avait AUCUN include prefixe `"src/..."` (verifie explicitement).
+Galaxy Fighter en avait 7, tous dans un seul fichier oublie lors du
+reformatage initial. Ce genre de reliquat de l'arborescence d'origine du
+jeu n'est pas previsible d'un jeu a l'autre.
+
+## Decision retenue
+
+✅ Toujours refaire la verification complete (grep `#include "src/`,
+verification cstdio/cstring, etc.) sur CHAQUE nouveau jeu porte, meme si le
+jeu de reference precedent n'avait pas ce probleme. ⚠️ candidat clair pour
+une etape automatisee de `pokitto2aka`.
+
+---
+
+## Conflit bouton materiel non resolu (a surveiller)
+
+## Constat
+
+Sur un boitier AKA de test, presser le bouton **C** seul declenche le
+retour au loader (combo systeme normalement reserve a RUN+MENU maintenus).
+Deux hypotheses logicielles ont ete ecartees par lecture de code
+(decalage d'encodage bouton, donnee perimee) sans trouver la cause -- elle
+est possiblement materielle (chevauchement electrique specifique a ce
+boitier). Non resolu a ce jour : necessite un relevage du bitmask brut au
+moment de l'appui pour continuer l'investigation.
+
+## Decision retenue (contournement, pas une solution)
+
+✅ Pour les jeux de style arcade (insert credit/start sur le meme bouton,
+souvent C), faire accepter la MEME action par un second bouton (BTN_A) en
+plus de l'original, plutot que de dependre d'un seul bouton potentiellement
+affecte par un conflit materiel non caracterise.
