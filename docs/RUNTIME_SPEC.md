@@ -133,16 +133,16 @@ API :
 akaRuntime.takeScreenshot();
 ```
 
-Répertoire :
+Répertoire (V0.4 : reorganise, un dossier par jeu -- cf. addendum DECISIONS.md) :
 
 ```text
-/sdcard/AKA/screenshots/
+/sdcard/<gameId>/screenshots/
 ```
 
-Nommage :
+Nommage (V0.4 : plus de prefixe du jeu dans le nom -- le dossier l'indique deja) :
 
 ```text
-KONG2_0001.BMP
+0001.BMP
 KONG2_0002.BMP
 ```
 
@@ -182,10 +182,11 @@ akaRuntime.setLanguage();
 akaRuntime.translate("KEY");
 ```
 
-Fichiers :
+Fichiers (V0.4 : deux niveaux -- commun + specifique au jeu, cf. addendum DECISIONS.md) :
 
 ```text
-/sdcard/AKA/lang/
+/sdcard/AKA/lang/<code>.json          -- commun (libelles du menu systeme, partage par tous les jeux)
+/sdcard/<gameId>/lang/<code>.json     -- specifique au jeu (commandes, etc.), prioritaire en cas de cle en double
 ```
 
 Exemple :

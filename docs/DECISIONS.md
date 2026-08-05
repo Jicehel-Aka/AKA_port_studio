@@ -802,3 +802,98 @@ execution.
 ✅ Principe general pour `pokitto2aka` : toute information qui ne peut pas
 etre determinee avec un niveau de confiance suffisant doit devenir une
 question posee a l'utilisateur, jamais une valeur devinee silencieusement.
+
+---
+
+# Addendum V0.4 — premier portage hors Pokitto (crisp-game-lib-portable)
+
+## Contexte
+
+4e jeu de reference, mais d'une nature differente des trois precedents :
+crisp-game-lib-portable (ABA Games / kenta cho, MIT) n'est PAS un jeu
+Pokitto -- c'est une bibliotheque C portable, deja adaptee a de nombreuses
+plateformes (SDL, Arduboy, ESPboy, Vircon32...), avec une interface de
+portage volontairement minimale (9 fonctions dans machineDependent.h).
+267 mini-jeux inclus, aucune adaptation individuelle necessaire (le principe
+meme de la bibliotheque est l'independance vis-a-vis de la plateforme).
+
+Ce portage n'utilise PAS pokitto_compat -- premiere fois que aka_runtime
+sert de socle a un projet qui ne passe pas par la couche de compatibilite
+Pokitto. Plusieurs enseignements en decoulent, resumes ci-dessous (le
+detail technique est dans compatibility_db.json).
+
+## Debordement memoire (DRAM) sur un gros catalogue de jeux
+
+Avec 267 jeux + bibliotheque dans un seul binaire, le cumul des tableaux
+statiques (etats de jeu, structures de collision...) a largement depasse
+la RAM interne de l'ESP32-S3 (debordement initial : 3.26 Mo). Deux lecons :
+
+✅ `CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY` ne deplace vers la PSRAM
+que le .bss des bibliotheques SYSTEME d'ESP-IDF -- PAS le code applicatif.
+Pour le code applicatif, chaque grand tableau statique doit etre annote
+individuellement avec `EXT_RAM_BSS_ATTR`.
+
+✅ Une detection automatique par script (regex) doit geler les
+declarations MULTI-LIGNES et les tableaux a 2/3+ dimensions -- le plus
+gros contributeur restant (2 Mo sur 2.09 Mo) etait un seul tableau 3D
+declare sur deux lignes, rate par la premiere passe (regex 1 ligne
+seulement).
+
+✅ Face a un debordement qui persiste apres une premiere correction
+partielle, `idf.py size-files` (ou le fichier .map) donne la contribution
+EXACTE de chaque fichier objet en quelques secondes -- a demander des le
+2e tour infructueux plutot que d'iterer par recherche de motifs a l'aveugle.
+
+## Deux oublis independants, memes symptomes : "rien ne se passe, aucune erreur"
+
+Sans pokitto_compat, deux responsabilites normalement geres par
+`Pokitto::Core::update()` doivent etre cablees manuellement :
+
+✅ `gfx.update()` -- sans lui, le rendu se fait bien (aucune erreur) mais
+n'est JAMAIS pousse vers l'ecran physique. Symptome : ecran fige sur le
+logo de demarrage indefiniment, boucle de jeu pourtant saine (confirme par
+trace).
+
+✅ `input_poll()` -- sans lui, `g_keys` reste fige a sa valeur initiale
+pour toujours. Symptome : aucune touche jamais detectee, aucune erreur.
+
+Les deux ont chacun necessite un cycle de diagnostic complet avant d'etre
+trouves. **Reflexe a avoir en premier** pour tout futur portage qui
+n'herite pas de pokitto_compat : verifier explicitement que ces deux
+appels existent quelque part dans la boucle principale.
+
+## Jeux-collection : un menu different de "un jeu = un binaire"
+
+Nouveau pattern ajoute a aka_runtime : `setGameMenuCallback(fn)`, optionnel.
+Si un jeu le renseigne (crisp-game-lib -> `goToMenu()`, son propre
+selecteur parmi les 267), une entree "Choisir un jeu" apparait dans le
+menu systeme, juste apres "Reprendre". Absent par defaut pour les jeux
+simples (Kong-II, Galaxy Fighter, Karateka) -- l'entree n'apparait tout
+simplement pas.
+
+## Reorganisation de l'arborescence SD (suite a une revue de coherence)
+
+✅ Principe retenu : tout ce qui est SPECIFIQUE a un jeu vit sous son
+PROPRE dossier -- `/sdcard/<gameId>/lang/`, `/sdcard/<gameId>/screenshots/`
+(en plus de `music/`, `meta.json`, `screen.bmp` deja en place). Seul ce qui
+est VRAIMENT commun a tous les jeux (libelles du menu systeme) reste sous
+`/sdcard/AKA/lang/`. Ancien schema (`AKA/lang/<gameId>/`,
+`AKA/screenshots/` avec prefixe par jeu dans le nom de fichier) abandonne.
+
+## Menu systeme : effacement explicite necessaire a la fermeture
+
+Certains jeux (dont plusieurs de crisp-game-lib) n'effacent/redessinent
+pas la totalite de l'ecran a chaque frame (optimisation courante) -- rien
+ne venait donc effacer le contour du menu systeme apres sa fermeture, qui
+restait visible indefiniment par-dessus le jeu. Fix : le menu s'efface
+lui-meme explicitement (sa propre zone) au moment ou il se ferme, avant de
+rendre la main -- le jeu redessine par-dessus des l'image suivante,
+invisible en pratique (une fraction de frame).
+
+## Rappel methodologique (recurrent sur ce projet)
+
+Une erreur de traduction (libelle "Retour au loader" ecrit par erreur
+"Retour au menu" dans les 5 langues) n'a ete remarquee qu'a l'usage, pas a
+la revue du code -- la LOGIQUE etait correcte (le bon appel de fonction),
+seul le TEXTE affiche etait trompeur. A garder en tete : verifier le sens
+des libelles traduits, pas seulement leur presence syntaxique.

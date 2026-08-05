@@ -450,6 +450,62 @@
       "since": "0.3",
       "confidence": 0,
       "notes": "Trouve par analyse automatique (Karateka_Pokitto, 2 appels). Variante de clear() -- peut-etre un clear immediat du LCD physique distinct du framebuffer interne. A investiguer avant implementation."
+    },
+    {
+      "symbol": "ESP32-S3 : gros tableaux statiques -- CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY insuffisant seul",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "CONFIRME (crisp-game-lib-portable, 267 jeux + bibliotheque) : cette option Kconfig ne deplace vers la PSRAM que le .bss des bibliotheques SYSTEME d'ESP-IDF (lwIP, WiFi, Bluetooth) -- PAS le .bss du code applicatif. Pour du code applicatif, chaque grand tableau statique doit etre annote INDIVIDUELLEMENT avec la macro EXT_RAM_BSS_ATTR (#include \"esp_attr.h\"). A verifier des le premier debordement DRAM plutot que de supposer que l'option seule suffit."
+    },
+    {
+      "symbol": "Detection automatique de gros tableaux statiques -- piege des declarations multi-lignes",
+      "status": "MANUAL",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "Un script d'annotation automatique (regex 'static Type nom[taille];' sur une seule ligne) a corrige ~1.2 Mo d'un debordement de 3.26 Mo, mais a rate le plus gros contributeur (2 Mo, un tableau 3D 'int[32][32][512]' declare sur DEUX lignes -- taille sur la 1ere, fermeture ';' sur la 2eme). Toute detection automatique de ce type doit gerer les declarations reparties sur plusieurs lignes, et les tableaux a 2 ou 3+ dimensions, pas seulement le cas 1D sur une ligne."
+    },
+    {
+      "symbol": "idf.py size-files / fichier .map -- a utiliser des le 2e echec de lien, pas apres plusieurs essais a l'aveugle",
+      "status": "SUPPORTED",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "Lecon de methode : face a un debordement DRAM qui persiste apres une premiere correction partielle, 'idf.py size-files' (ou le fichier .map genere par l'editeur de liens) donne la contribution EXACTE de chaque fichier objet en quelques secondes -- bien plus rapide et fiable que d'iterer par recherche de motifs. A demander des le 2e tour de correction infructueux, pas seulement en dernier recours."
+    },
+    {
+      "symbol": "gfx.update() et input_poll() : necessaires manuellement hors du wrapper Pokitto::Core",
+      "status": "MANUAL",
+      "category": "core",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "Pour tout portage n'utilisant PAS pokitto_compat (ex: crisp-game-lib-portable, interface machineDependent.h generique) : Pokitto::Core::update() gere normalement DEUX choses en interne que les portages precedents tenaient pour acquises -- l'appel a gfx.update() (sans lui, RIEN ne s'affiche jamais, aucune erreur) et l'appel a input_poll() (sans lui, AUCUNE touche n'est jamais detectee, aucune erreur non plus). Les deux oublis ont ete faits independamment sur ce portage et ont chacun necessite un cycle de diagnostic complet avant d'etre trouves -- a verifier explicitement en premier reflexe pour tout futur portage qui n'herite pas de pokitto_compat."
+    },
+    {
+      "symbol": "Menu systeme : effacement explicite necessaire a la fermeture (jeux sans redessin complet par frame)",
+      "status": "SUPPORTED",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 90,
+      "notes": "Le menu systeme (aka_runtime) dessine sa boite par-dessus l'ecran du jeu. Certains jeux (dont plusieurs jeux de crisp-game-lib) n'effacent/redessinent pas la totalite de l'ecran a chaque frame (optimisation courante), donc rien ne venait effacer le contour du menu apres sa fermeture -- reste visible indefiniment par-dessus le jeu. Fix : le menu s'efface lui-meme explicitement (sa propre zone, en une couleur neutre) au moment de sa fermeture, avant de rendre la main -- le jeu redessine par-dessus des l'image suivante."
+    },
+    {
+      "symbol": "Jeux-collection (ex: crisp-game-lib, plusieurs jeux dans un seul binaire) : setGameMenuCallback",
+      "status": "SUPPORTED",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "Pattern ajoute a aka_runtime pour les projets qui embarquent plusieurs jeux avec leur propre selecteur interne (crisp-game-lib-portable : 267 jeux, un seul binaire). akaRuntime.setGameMenuCallback(fn) est optionnel -- si defini, une entree 'Choisir un jeu' apparait dans le menu systeme (juste apres 'Reprendre') et appelle la fonction fournie ; absent par defaut pour les jeux simples (Kong-II, Galaxy Fighter, Karateka), qui n'affichent pas cette entree."
+    },
+    {
+      "symbol": "Arborescence SD : tout ce qui est specifique a un jeu vit sous son propre dossier",
+      "status": "SUPPORTED",
+      "category": "other",
+      "since": "0.4",
+      "confidence": 100,
+      "notes": "Reorganisation (suite a une revue de coherence) : /sdcard/AKA/lang/<gameId>/ -> /sdcard/<gameId>/lang/, et /sdcard/AKA/screenshots/ (prefixe par jeu dans le nom de fichier) -> /sdcard/<gameId>/screenshots/ (numerotation simple, le dossier indique deja le jeu). Seul ce qui est VRAIMENT commun a tous les jeux (libelles du menu systeme) reste sous /sdcard/AKA/lang/. Principe general a suivre pour tout futur portage."
     }
   ]
 }
